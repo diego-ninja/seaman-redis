@@ -80,3 +80,20 @@ test('command shows message when no keys found', function (): void {
 
     expect($tester->getDisplay())->toContain('No keys found');
 });
+
+test('command shows error when keys fails', function (): void {
+    $this->executor
+        ->shouldReceive('execute')
+        ->once()
+        ->andReturn(new ProcessResult(1, '', 'error'));
+
+    $command = new RedisKeysCommand($this->executor);
+    $app = new Application();
+    $app->add($command);
+
+    $tester = new CommandTester($command);
+    $tester->execute([]);
+
+    expect($tester->getStatusCode())->toBe(1);
+    expect($tester->getDisplay())->toContain('Failed');
+});

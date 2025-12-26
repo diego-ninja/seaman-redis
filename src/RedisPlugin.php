@@ -7,12 +7,21 @@ declare(strict_types=1);
 
 namespace Seaman\Redis;
 
+use Seaman\Contract\CommandExecutor;
 use Seaman\Enum\ServiceCategory;
 use Seaman\Plugin\Attribute\AsSeamanPlugin;
+use Seaman\Plugin\Attribute\ProvidesCommand;
 use Seaman\Plugin\Attribute\ProvidesService;
 use Seaman\Plugin\Config\ConfigSchema;
 use Seaman\Plugin\PluginInterface;
 use Seaman\Plugin\ServiceDefinition;
+use Seaman\Redis\Command\ClusterInfoCommand;
+use Seaman\Redis\Command\ClusterNodesCommand;
+use Seaman\Redis\Command\RedisCliCommand;
+use Seaman\Redis\Command\RedisFlushCommand;
+use Seaman\Redis\Command\RedisInfoCommand;
+use Seaman\Redis\Command\RedisKeysCommand;
+use Seaman\Redis\Command\RedisMonitorCommand;
 use Seaman\ValueObject\HealthCheck;
 
 #[AsSeamanPlugin(
@@ -26,6 +35,8 @@ final class RedisPlugin implements PluginInterface
 
     /** @var array<string, mixed> */
     private array $config = [];
+
+    private ?CommandExecutor $executor = null;
 
     public function __construct()
     {
@@ -158,5 +169,61 @@ final class RedisPlugin implements PluginInterface
             ),
             configSchema: $this->schema,
         );
+    }
+
+    public function setCommandExecutor(CommandExecutor $executor): void
+    {
+        $this->executor = $executor;
+    }
+
+    private function getExecutor(): CommandExecutor
+    {
+        if ($this->executor === null) {
+            throw new \RuntimeException('CommandExecutor not set. Call setCommandExecutor() first.');
+        }
+
+        return $this->executor;
+    }
+
+    #[ProvidesCommand]
+    public function cliCommand(): RedisCliCommand
+    {
+        return new RedisCliCommand($this->getExecutor());
+    }
+
+    #[ProvidesCommand]
+    public function flushCommand(): RedisFlushCommand
+    {
+        return new RedisFlushCommand($this->getExecutor());
+    }
+
+    #[ProvidesCommand]
+    public function infoCommand(): RedisInfoCommand
+    {
+        return new RedisInfoCommand($this->getExecutor());
+    }
+
+    #[ProvidesCommand]
+    public function monitorCommand(): RedisMonitorCommand
+    {
+        return new RedisMonitorCommand($this->getExecutor());
+    }
+
+    #[ProvidesCommand]
+    public function keysCommand(): RedisKeysCommand
+    {
+        return new RedisKeysCommand($this->getExecutor());
+    }
+
+    #[ProvidesCommand]
+    public function clusterInfoCommand(): ClusterInfoCommand
+    {
+        return new ClusterInfoCommand($this->getExecutor());
+    }
+
+    #[ProvidesCommand]
+    public function clusterNodesCommand(): ClusterNodesCommand
+    {
+        return new ClusterNodesCommand($this->getExecutor());
     }
 }

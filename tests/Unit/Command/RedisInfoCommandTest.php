@@ -64,3 +64,20 @@ test('command filters by section', function (): void {
     expect($tester->getStatusCode())->toBe(0);
     expect($tester->getDisplay())->toContain('used_memory');
 });
+
+test('command shows error when info fails', function (): void {
+    $this->executor
+        ->shouldReceive('execute')
+        ->once()
+        ->andReturn(new ProcessResult(1, '', 'error'));
+
+    $command = new RedisInfoCommand($this->executor);
+    $app = new Application();
+    $app->add($command);
+
+    $tester = new CommandTester($command);
+    $tester->execute([]);
+
+    expect($tester->getStatusCode())->toBe(1);
+    expect($tester->getDisplay())->toContain('Failed');
+});

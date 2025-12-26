@@ -63,3 +63,20 @@ test('command always uses cluster node', function (): void {
 
     expect($tester->getStatusCode())->toBe(0);
 });
+
+test('command shows error when cluster not running', function (): void {
+    $this->executor
+        ->shouldReceive('execute')
+        ->once()
+        ->andReturn(new ProcessResult(1, '', 'error'));
+
+    $command = new ClusterNodesCommand($this->executor);
+    $app = new Application();
+    $app->add($command);
+
+    $tester = new CommandTester($command);
+    $tester->execute([]);
+
+    expect($tester->getStatusCode())->toBe(1);
+    expect($tester->getDisplay())->toContain('Failed');
+});

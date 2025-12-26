@@ -73,3 +73,20 @@ test('command flushes after confirmation', function (): void {
 
     expect($tester->getDisplay())->toContain('flushed');
 });
+
+test('command shows error when flush fails', function (): void {
+    $this->executor
+        ->shouldReceive('execute')
+        ->once()
+        ->andReturn(new ProcessResult(1, '', 'error'));
+
+    $command = new RedisFlushCommand($this->executor);
+    $app = new Application();
+    $app->add($command);
+
+    $tester = new CommandTester($command);
+    $tester->execute(['--force' => true]);
+
+    expect($tester->getStatusCode())->toBe(1);
+    expect($tester->getDisplay())->toContain('Failed');
+});
