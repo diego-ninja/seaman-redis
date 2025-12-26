@@ -9,6 +9,7 @@ namespace Seaman\Redis;
 
 use Seaman\Contract\CommandExecutor;
 use Seaman\Enum\ServiceCategory;
+use Seaman\Service\Process\RealCommandExecutor;
 use Seaman\Plugin\Attribute\AsSeamanPlugin;
 use Seaman\Plugin\Attribute\ProvidesCommand;
 use Seaman\Plugin\Attribute\ProvidesService;
@@ -179,7 +180,7 @@ final class RedisPlugin implements PluginInterface
     private function getExecutor(): CommandExecutor
     {
         if ($this->executor === null) {
-            throw new \RuntimeException('CommandExecutor not set. Call setCommandExecutor() first.');
+            $this->executor = new RealCommandExecutor();
         }
 
         return $this->executor;

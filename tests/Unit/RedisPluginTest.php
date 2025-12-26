@@ -119,8 +119,11 @@ test('plugin provides cluster nodes command', function (): void {
     expect($plugin->clusterNodesCommand())->toBeInstanceOf(ClusterNodesCommand::class);
 });
 
-test('plugin throws exception when executor not set', function (): void {
+test('plugin creates default executor when not set', function (): void {
     $plugin = new RedisPlugin();
 
-    expect(fn() => $plugin->cliCommand())->toThrow(\RuntimeException::class);
+    // Should not throw - creates RealCommandExecutor by default
+    $command = $plugin->cliCommand();
+
+    expect($command)->toBeInstanceOf(RedisCliCommand::class);
 });
