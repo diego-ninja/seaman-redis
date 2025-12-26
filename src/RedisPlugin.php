@@ -7,9 +7,13 @@ declare(strict_types=1);
 
 namespace Seaman\Redis;
 
+use Seaman\Enum\ServiceCategory;
 use Seaman\Plugin\Attribute\AsSeamanPlugin;
+use Seaman\Plugin\Attribute\ProvidesService;
 use Seaman\Plugin\Config\ConfigSchema;
 use Seaman\Plugin\PluginInterface;
+use Seaman\Plugin\ServiceDefinition;
+use Seaman\ValueObject\HealthCheck;
 
 #[AsSeamanPlugin(
     name: 'seaman/redis',
@@ -77,5 +81,41 @@ final class RedisPlugin implements PluginInterface
     public function getConfig(): array
     {
         return $this->config;
+    }
+
+    #[ProvidesService(name: 'redis', category: ServiceCategory::Cache)]
+    public function redisService(): ServiceDefinition
+    {
+        $port = $this->config['port'];
+        assert(is_int($port));
+
+        $version = $this->config['version'];
+        assert(is_string($version));
+
+        $persistence = $this->config['persistence'];
+        assert(is_bool($persistence));
+
+        return new ServiceDefinition(
+            name: 'redis',
+            template: __DIR__ . '/../templates/redis.yaml.twig',
+            displayName: 'Redis',
+            description: 'In-memory data store for cache and sessions',
+            icon: '🔴',
+            category: ServiceCategory::Cache,
+            ports: [$port],
+            internalPorts: [6379],
+            defaultConfig: [
+                'version' => $version,
+                'port' => $port,
+                'persistence' => $persistence,
+            ],
+            healthCheck: new HealthCheck(
+                test: ['CMD', 'redis-cli', 'ping'],
+                interval: '10s',
+                timeout: '5s',
+                retries: 5,
+            ),
+            configSchema: $this->schema,
+        );
     }
 }
