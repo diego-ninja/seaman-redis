@@ -1,0 +1,36 @@
+{% for i in 1..6 %}
+redis-node-{{ i }}:
+  image: redis:{{ version }}
+  ports:
+    - "{{ cluster_base_port + i - 1 }}:6379"
+  command: >
+    redis-server
+    --cluster-enabled yes
+    --cluster-config-file nodes.conf
+    --cluster-node-timeout 5000
+    --appendonly {{ persistence ? 'yes' : 'no' }}
+  healthcheck:
+    test: ["CMD", "redis-cli", "ping"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+  restart: unless-stopped
+{% if persistence %}
+  volumes:
+    - redis_node_{{ i }}_data:/data
+{% endif %}
+
+{% endfor %}
+redis-cluster-init:
+  image: redis:{{ version }}
+  depends_on:
+{% for i in 1..6 %}
+    redis-node-{{ i }}:
+      condition: service_healthy
+{% endfor %}
+  command: >
+    redis-cli --cluster create
+    redis-node-1:6379 redis-node-2:6379 redis-node-3:6379
+    redis-node-4:6379 redis-node-5:6379 redis-node-6:6379
+    --cluster-replicas 1 --cluster-yes
+  restart: "no"

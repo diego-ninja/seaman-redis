@@ -118,4 +118,45 @@ final class RedisPlugin implements PluginInterface
             configSchema: $this->schema,
         );
     }
+
+    #[ProvidesService(name: 'redis-cluster', category: ServiceCategory::Cache)]
+    public function redisClusterService(): ServiceDefinition
+    {
+        $basePort = $this->config['cluster_base_port'];
+        assert(is_int($basePort));
+
+        $version = $this->config['version'];
+        assert(is_string($version));
+
+        $persistence = $this->config['persistence'];
+        assert(is_bool($persistence));
+
+        $ports = [];
+        for ($i = 0; $i < 6; $i++) {
+            $ports[] = $basePort + $i;
+        }
+
+        return new ServiceDefinition(
+            name: 'redis-cluster',
+            template: __DIR__ . '/../templates/redis-cluster.yaml.twig',
+            displayName: 'Redis Cluster',
+            description: 'Redis Cluster with 3 masters and 3 replicas',
+            icon: '🔴',
+            category: ServiceCategory::Cache,
+            ports: $ports,
+            internalPorts: [6379],
+            defaultConfig: [
+                'version' => $version,
+                'cluster_base_port' => $basePort,
+                'persistence' => $persistence,
+            ],
+            healthCheck: new HealthCheck(
+                test: ['CMD', 'redis-cli', 'ping'],
+                interval: '10s',
+                timeout: '5s',
+                retries: 5,
+            ),
+            configSchema: $this->schema,
+        );
+    }
 }
