@@ -1,0 +1,54 @@
+{
+    "name": "seaman/redis",
+    "description": "Redis and Redis Cluster plugin for Seaman",
+    "type": "seaman-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Diego Rin",
+            "email": "yosoy@diego.ninja"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../seaman",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "seaman/seaman": "@dev"
+    },
+    "require-dev": {
+        "pestphp/pest": "^4.0",
+        "phpstan/phpstan": "^2.0",
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "mockery/mockery": "^1.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "Seaman\\Redis\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Seaman\\Redis\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "seaman": {
+            "plugin-class": "Seaman\\Redis\\RedisPlugin"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
